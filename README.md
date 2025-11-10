@@ -2,18 +2,21 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json&style=for-the-badge)](https://docs.astral.sh/ruff/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ty/main/assets/badge/v0.json&style=for-the-badge)](https://docs.astral.sh/ty/)
 
-
+<br>
 
 <!--suppress HtmlDeprecatedAttribute -->
 <p align="center">
-  <img width="20%" src="./assets/ruff.png" alt="Ruff Logo">
-  <img width="20%" src="./assets/jetbrains.png" alt="Ruff Logo">
+  <img width="20%" src="https://raw.githubusercontent.com/OliverSieweke/ruff-jupyter-jetbrains/main/assets/ruff.png" alt="Ruff Logo">
+  <img width="20%" src="https://raw.githubusercontent.com/OliverSieweke/ruff-jupyter-jetbrains/main//assets/jetbrains.png" alt="Ruff Logo">
 </p>
 
 
-# Ruff-Jupyter-JetBrains
+# ruff-jupyter-jetbrains
 
 ## Usage
+
+
+---
 
 ## Development
 
@@ -39,13 +42,13 @@ pre-commit install
 ruff format
 ```
 
-`ruff` is used as a **linter,** and code can be checked with:
+`ruff` is used as a **linter** and code can be checked with:
 
 ```shell
 ruff check
 ```
 
-`ty` is used as a **type checker,** and code can be checked with:
+`ty` is used as a **type checker** and code can be checked with:
 
 ```shell
 ty check
