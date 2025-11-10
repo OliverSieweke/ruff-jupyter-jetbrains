@@ -7,11 +7,13 @@
 <!--suppress HtmlDeprecatedAttribute -->
 <p align="center">
   <img width="20%" src="./assets/ruff.png" alt="Ruff Logo">
+  <img width="20%" src="./assets/jetbrains.png" alt="Ruff Logo">
 </p>
 
 
-# Ruff-Jupyter-Jetbrains
+# Ruff-Jupyter-JetBrains
 
+## Usage
 
 ## Development
 
