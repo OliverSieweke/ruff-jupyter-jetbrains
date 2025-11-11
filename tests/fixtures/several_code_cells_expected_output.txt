@@ -1,5 +1,5 @@
 tests/fixtures/several_code_cells.ipynb:2:6: Ruff (F821): Undefined name `a`
 tests/fixtures/several_code_cells.ipynb:4:0: Ruff (F403): `from os import *` used; unable to detect undefined names
-tests/fixtures/several_code_cells.ipynb:9:4: Ruff (F811): Redefinition of unused `my_function` from cell 3, line 1: `my_function` redefined here
+tests/fixtures/several_code_cells.ipynb:9:4: Ruff (F811): Redefinition of unused `my_function` from cell 3, line 1
 tests/fixtures/several_code_cells.ipynb:13:10: Ruff (F405): `x` may be undefined, or defined from star imports
 tests/fixtures/several_code_cells.ipynb:14:4: Ruff (F841): Local variable `x` is assigned to but never used

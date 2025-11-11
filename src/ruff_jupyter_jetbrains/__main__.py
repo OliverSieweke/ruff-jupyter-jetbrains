@@ -23,11 +23,13 @@ Use the script directly with Python. This is particularly useful within a config
 JetBrains file watcher for `.ipynb` files.
 """
 
+import json
 import re
 import subprocess
 import sys
 from itertools import accumulate
 from pathlib import Path
+from typing import TypedDict
 
 import nbformat
 
@@ -37,8 +39,23 @@ RUFF_CONCISE_LINE_OUTPUT_PATTERN = re.compile(
 )
 
 
+class RuffLocation(TypedDict):
+    column: int
+    row: int
+
+
+class RuffLintingError(TypedDict):
+    filename: str
+    cell: int
+    location: RuffLocation
+    code: str
+    message: str
+
+
 def transform_ruff_to_jetbrains_compatible_output(
-    ruff_output: str, cell_sources: list[str]
+    notebook_path: Path,
+    ruff_parsed_output: list[RuffLintingError],
+    cell_sources: list[str],
 ) -> str:
     """
     Transforms Ruff output to a JetBrains compatible format.
@@ -56,19 +73,19 @@ def transform_ruff_to_jetbrains_compatible_output(
 
     NB: The JetBrains and Ruff column numbers are shifted by 1 in their indexing
 
-    :param ruff_output: Ruff linting output.
-    :param cell_sources: Cell line offsets for each cell in the JetBrains representation.
+    :param notebook_path: Notebook path.
+    :param ruff_parsed_output: Parsed ruff linting output.
+    :param cell_sources: Cell sources as specified by the Jupyter notebook JSON content.
     :return: JetBrains compatible output
     """
     """Transform Ruff output from cell X:line:col format to raw_line:col format."""
-    ruff_lines = re.split(LINE_BREAK, ruff_output)
+    # ruff_lines = re.split(LINE_BREAK, ruff_output)
 
     jetbrains_cell_line_offsets = compute_jetbrains_cell_offsets(cell_sources)
 
     transformed_lines = [
-        f"{match['file_path']}:{jetbrains_cell_line_offsets[int(match['cell']) - 1] + int(match['line'])}:{int(match['column']) - 1}: Ruff ({match['error_code']}): {match['message']}"
-        for ruff_line in ruff_lines
-        if (match := re.match(RUFF_CONCISE_LINE_OUTPUT_PATTERN, ruff_line))
+        f"{notebook_path}:{jetbrains_cell_line_offsets[int(ruff_line['cell']) - 1] + int(ruff_line['location']['row'])}:{int(ruff_line['location']['column']) - 1}: Ruff ({ruff_line['code']}): {ruff_line['message']}"
+        for ruff_line in ruff_parsed_output
     ]
 
     return "\n".join(transformed_lines)
@@ -156,15 +173,18 @@ def main():
 
     # Processing
     ruff_output = subprocess.run(
-        ["ruff", "check", "--output-format=concise", "--quiet", notebook_path],
+        ["ruff", "check", "--output-format=json", "--quiet", notebook_path],
         capture_output=True,
         text=True,
     )
+
+    ruff_parsed_output = json.loads(ruff_output.stdout)
+
     cell_sources = read_cells(notebook_path)
 
     # Transforming
     jetbrains_compatible_output = transform_ruff_to_jetbrains_compatible_output(
-        ruff_output.stdout, cell_sources
+        notebook_path, ruff_parsed_output, cell_sources
     )
 
     # Output
