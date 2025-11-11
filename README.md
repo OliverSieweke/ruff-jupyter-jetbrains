@@ -1,6 +1,8 @@
 [![image](https://img.shields.io/badge/python-3.14-gray?style=for-the-badge&logo=python&logoColor=FFD43B&labelColor=306998)](https://www.python.org/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json&style=for-the-badge)](https://docs.astral.sh/ruff/)
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ty/main/assets/badge/v0.json&style=for-the-badge)](https://docs.astral.sh/ty/)
+[![Tests](https://img.shields.io/github/actions/workflow/status/OliverSieweke/ruff-jupyter-jetbrains/test.yml?style=for-the-badge&label=Tests&logo=github)](https://github.com/OliverSieweke/ruff-jupyter-jetbrains/actions/workflows/test.yml)
+
 
 <br>
 
