@@ -26,17 +26,19 @@ JetBrains file watcher for `.ipynb` files.
 import re
 import subprocess
 import sys
-import warnings
 from itertools import accumulate
 from pathlib import Path
 
 import nbformat
 
-LINE_BREAK = r"\r\n|\r|\n"
+LINE_BREAK = re.compile(r"\r\n|\r|\n")
+RUFF_CONCISE_LINE_OUTPUT_PATTERN = re.compile(
+    r"^(?P<file_path>.+?):cell (?P<cell>\d+):(?P<line>\d+):(?P<column>\d+): (?P<error_code>[A-Z]\d{3}) (?P<message>.*)$"
+)
 
 
 def transform_ruff_to_jetbrains_compatible_output(
-    ruff_output: str, jetbrains_cell_line_offsets: list[int]
+    ruff_output: str, cell_sources: list[str]
 ) -> str:
     """
     Transforms Ruff output to a JetBrains compatible format.
@@ -55,12 +57,13 @@ def transform_ruff_to_jetbrains_compatible_output(
     NB: The JetBrains and Ruff column numbers are shifted by 1 in their indexing
 
     :param ruff_output: Ruff linting output.
-    :param jetbrains_cell_line_offsets: Cell line offsets for each cell in the JetBrains representation.
+    :param cell_sources: Cell line offsets for each cell in the JetBrains representation.
     :return: JetBrains compatible output
     """
-    RUFF_CONCISE_LINE_OUTPUT_PATTERN = r"^(?P<file_path>.+?):cell (?P<cell>\d+):(?P<line>\d+):(?P<column>\d+): (?P<error_code>[A-Z]\d{3}) (?P<message>.*)$"
     """Transform Ruff output from cell X:line:col format to raw_line:col format."""
     ruff_lines = re.split(LINE_BREAK, ruff_output)
+
+    jetbrains_cell_line_offsets = compute_jetbrains_cell_offsets(cell_sources)
 
     transformed_lines = [
         f"{match['file_path']}:{jetbrains_cell_line_offsets[int(match['cell']) - 1] + int(match['line'])}:{int(match['column']) - 1}: Ruff ({match['error_code']}): {match['message']}"
@@ -71,7 +74,7 @@ def transform_ruff_to_jetbrains_compatible_output(
     return "\n".join(transformed_lines)
 
 
-def read_cells(notebook_path: str) -> list[str]:
+def read_cells(notebook_path: Path) -> list[str]:
     """
     Reads the cells of the notebook using the official parser.
 
@@ -121,35 +124,53 @@ def compute_jetbrains_cell_offsets(
 
 
 def main():
-    if len(sys.argv) == 0:
-        warnings.warn(
-            "\033[93mMake sure you provide the JetBrains $FilePath$ argument in the file watcher run configurations\033[0m",
-            stacklevel=2,
+    # Input Validation
+    if len(sys.argv) == 1:
+        print(
+            "\033[91mNo file specified. Make sure you provide the JetBrains $FilePath$ argument in the file watcher run configurations\033[0m",
+            file=sys.stderr,
         )
-
-    notebook_path = sys.argv[1]
-
-    if Path(notebook_path).suffix != ".ipynb":
-        warnings.warn(
-            "\033[93mruff-jupyter-jetbrains is designed to be run on \033[4m.ipynb\033[24m files. Make sure the file watcher is configured for Jupyter files exclusively.\033[0m",
-            stacklevel=2,
+        sys.exit(2)
+    if len(sys.argv) >= 3:
+        print(
+            "\033[91mSeveral files specified. Make sure you only provide the JetBrains $FilePath$ argument in the file watcher run configurations\033[0m",
+            file=sys.stderr,
         )
+        sys.exit(2)
 
-    result = subprocess.run(
+    notebook_path = Path(sys.argv[1])
+
+    if notebook_path.suffix != ".ipynb":
+        print(
+            "\033[91mruff-jupyter-jetbrains is designed to be run on \033[4m.ipynb\033[24m files. Make sure the JetBrains file watcher is configured for Jupyter files exclusively.\033[0m",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    if not notebook_path.is_file():
+        print(
+            f"\033[91mFile {notebook_path} does not exist. This is unexpected if you use ruff-jupyter-jetbrains as a file watcher.\033[0m",
+            file=sys.stderr,
+        )
+        sys.exit(2)
+
+    # Processing
+    ruff_output = subprocess.run(
         ["ruff", "check", "--output-format=concise", "--quiet", notebook_path],
         capture_output=True,
         text=True,
     )
-
     cell_sources = read_cells(notebook_path)
-    jetbrains_cell_line_offsets = compute_jetbrains_cell_offsets(cell_sources)
+
+    # Transforming
     jetbrains_compatible_output = transform_ruff_to_jetbrains_compatible_output(
-        result.stdout, jetbrains_cell_line_offsets
+        ruff_output.stdout, cell_sources
     )
 
+    # Output
     print(jetbrains_compatible_output, end="")
-
-    sys.exit(result.returncode)
+    print(ruff_output.stderr, end="")
+    sys.exit(ruff_output.returncode)
 
 
 if __name__ == "__main__":

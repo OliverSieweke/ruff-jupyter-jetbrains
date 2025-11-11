@@ -1,0 +1,1 @@
+tests/fixtures/single_code_cell.ipynb:2:6: Ruff (F821): Undefined name `a`

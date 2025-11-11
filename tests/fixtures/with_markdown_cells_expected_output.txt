@@ -1,0 +1,1 @@
+tests/fixtures/with_markdown_cells.ipynb:4:6: Ruff (F821): Undefined name `a`

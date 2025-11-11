@@ -25,6 +25,7 @@ ruff-jupyter-jetbrains = "ruff_jupyter_jetbrains.__main__:main"
 [dependency-groups]
 dev = [
     "pre-commit>=4.4.0",
+    "pytest>=9.0.0",
     "ruff>=0.14.4",
     "ty>=0.0.1a25",
 ]
