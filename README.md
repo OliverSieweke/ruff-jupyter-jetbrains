@@ -59,7 +59,7 @@ If you want to keep your project dependencies minimal, you could also use an iso
 
 JetBrains maintains an intermediary notebook representation that differs from the raw notebook JSON content: each cell source appears as is in order and is marked up with a comment line that specifies its type (`# %%` for code and `# %%m` for markdown).
 
-In addition custom JetBrains file watchers can show inspection messages when their output can be parsed into a file path, line, column and message.
+In addition, custom JetBrains file watchers can show inspection messages when their output can be parsed into a file path, line, column and message.
 
 With that knowledge the `ruff` linting output can be used and converted to a format compatible with JetBrains file watchers.
 
@@ -67,7 +67,7 @@ With that knowledge the `ruff` linting output can be used and converted to a for
 
 > [!WARNING]
 >
-> This little tool, while functional, is only meant as a workaround. Ideally this functionality should live in a proper plugins that makes use of the language server protocol. This was motivated by a standing [issue](https://github.com/koxudaxi/ruff-pycharm-plugin/issues/352) in the [Ruff plugin](https://plugins.jetbrains.com/plugin/20574-ruff) and my lack of Kotlin knowledge to fix it at the root.
+> This little tool, while functional, is only meant as a workaround. Ideally, this functionality should live in a proper plugin that makes use of the language server protocol. This was motivated by a standing [issue](https://github.com/koxudaxi/ruff-pycharm-plugin/issues/352) in the [Ruff plugin](https://plugins.jetbrains.com/plugin/20574-ruff) and my lack of Kotlin knowledge to fix it at the root.
 
 
 

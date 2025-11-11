@@ -1,26 +1,13 @@
 #!/usr/bin/env -S uv run python
 """
-Transforms Ruff output to a JetBrains compatible format for Jupyter notebooks.
+Transforms Ruff output to a JetBrains compatible format for Jupyter notebook file
+watchers.
 
-This script takes Ruff linter output, processes it to convert line and column references
-from their cell-based format to a JetBrains-compatible intermediary format, and prints
-the results. It integrates with JetBrains IDEs when working with Jupyter Notebook files.
+JetBrains maintains an intermediary representation that differs from the raw notebook
+JSON content: each cell source appears as is in order and is marked up with a comment
+line that specifies its type (# %% for code and # %%m for Markdown).
 
-The script uses the Ruff concise output, which contains information about files,
-cells, and line/column numbers, and adjusts these to JetBrains cell offsets to match
-JetBrains' representation of notebooks. It warns users when the specified file is not
-a Jupyter `.ipynb` file and expects the `ruff` command-line tool to be available.
-
-Functions:
-- transform_ruff_to_jetbrains_compatible_output: Converts Ruff output to the expected
-  JetBrains format.
-- read_cell: Reads the source content from each cell in the Jupyter notebook.
-- compute_jetbrains_cell_offsets: Computes line offsets per Jupyter cell into JetBrains
-  representation accounting for blank lines and cell markers.
-- main: The entry point of the script that ties together all functionalities.
-
-Use the script directly with Python. This is particularly useful within a configured
-JetBrains file watcher for `.ipynb` files.
+This script makes the link between both formats.
 """
 
 import json
@@ -34,9 +21,6 @@ from typing import TypedDict
 import nbformat
 
 LINE_BREAK = re.compile(r"\r\n|\r|\n")
-RUFF_CONCISE_LINE_OUTPUT_PATTERN = re.compile(
-    r"^(?P<file_path>.+?):cell (?P<cell>\d+):(?P<line>\d+):(?P<column>\d+): (?P<error_code>[A-Z]\d{3}) (?P<message>.*)$"
-)
 
 
 class RuffLocation(TypedDict):
@@ -60,14 +44,12 @@ def transform_ruff_to_jetbrains_compatible_output(
     """
     Transforms Ruff output to a JetBrains compatible format.
 
-    The line numbers must be mapped so as to be compatible with JetBrain's intermediate notebook representation.
-    The file watcher expression must be able to extract the file path, the line number and the expression.
+    The line numbers must be mapped to be compatible with JetBrain's intermediate
+    notebook representation.
+    The file watcher expression must be able to extract the file path, the line number,
+    and the expression.
 
-    We transform the ruff format:
-
-        {file_path}:cell {cell_number}:{cell_line_number}:{ruff_column_number}: {error_code} {message}"
-
-    into the following JetBrains compatible format:
+    We transform the ruff JSON output into the following JetBrains compatible format:
 
         {file_path}:{jetbrains_line_number}:{jetbrains_column_number}: Ruff({error_code}): {message}"
 
@@ -76,15 +58,15 @@ def transform_ruff_to_jetbrains_compatible_output(
     :param notebook_path: Notebook path.
     :param ruff_parsed_output: Parsed ruff linting output.
     :param cell_sources: Cell sources as specified by the Jupyter notebook JSON content.
-    :return: JetBrains compatible output
-    """
-    """Transform Ruff output from cell X:line:col format to raw_line:col format."""
-    # ruff_lines = re.split(LINE_BREAK, ruff_output)
-
+    :return: JetBrains file watcher compatible output.
+    """  # noqa: E501
     jetbrains_cell_line_offsets = compute_jetbrains_cell_offsets(cell_sources)
 
     transformed_lines = [
-        f"{notebook_path}:{jetbrains_cell_line_offsets[int(ruff_line['cell']) - 1] + int(ruff_line['location']['row'])}:{int(ruff_line['location']['column']) - 1}: Ruff ({ruff_line['code']}): {ruff_line['message']}"
+        f"{notebook_path}:"
+        f"{jetbrains_cell_line_offsets[int(ruff_line['cell']) - 1] + int(ruff_line['location']['row'])}:"  # noqa: E501
+        f"{int(ruff_line['location']['column']) - 1}: "
+        f"Ruff ({ruff_line['code']}): {ruff_line['message']}"
         for ruff_line in ruff_parsed_output
     ]
 
@@ -127,16 +109,16 @@ def compute_jetbrains_cell_offsets(
         # %% md
         # Some Markdown
 
-    :param cell_sources: list of notebook cells.
+    :param cell_sources: List of notebook cell sources.
     :return: Computed cell line offsets for each cell in the JetBrains representation.
     """
     jetbrains_full_cell_line_counts = [
-        # + 2 accounts for cell marker line and trailing blank line
+        # + 2 accounts for the cell markup line and the trailing blank line
         len(re.findall(LINE_BREAK, cell_source)) + 2
         for cell_source in cell_sources
     ]
 
-    # initial=1 accounts for the marker line of the first cell
+    # initial=1 accounts for the markup line of the first cell
     return list(accumulate(jetbrains_full_cell_line_counts[:-1], initial=1))
 
 
@@ -144,13 +126,15 @@ def main():
     # Input Validation
     if len(sys.argv) == 1:
         print(
-            "\033[91mNo file specified. Make sure you provide the JetBrains $FilePath$ argument in the file watcher run configurations\033[0m",
+            "\033[91mNo file specified. Make sure you provide the JetBrains $FilePath$",
+            "argument in the file watcher configurations\033[0m",
             file=sys.stderr,
         )
         sys.exit(2)
     if len(sys.argv) >= 3:
         print(
-            "\033[91mSeveral files specified. Make sure you only provide the JetBrains $FilePath$ argument in the file watcher run configurations\033[0m",
+            "\033[91mSeveral files specified. Make sure you only provide the JetBrains",
+            "$FilePath$ argument in the file watcher run configurations\033[0m",
             file=sys.stderr,
         )
         sys.exit(2)
@@ -159,14 +143,17 @@ def main():
 
     if notebook_path.suffix != ".ipynb":
         print(
-            "\033[91mruff-jupyter-jetbrains is designed to be run on \033[4m.ipynb\033[24m files. Make sure the JetBrains file watcher is configured for Jupyter files exclusively.\033[0m",
+            "\033[91mruff-jupyter-jetbrains is designed to be run on",
+            "\033[4m.ipynb\033[24m files. Make sure the JetBrains file watcher is",
+            "configured for Jupyter files exclusively.\033[0m",
             file=sys.stderr,
         )
         sys.exit(2)
 
     if not notebook_path.is_file():
         print(
-            f"\033[91mFile {notebook_path} does not exist. This is unexpected if you use ruff-jupyter-jetbrains as a file watcher.\033[0m",
+            f"\033[91mFile {notebook_path} does not exist. This is unexpected",
+            "if you use ruff-jupyter-jetbrains as a file watcher.\033[0m",
             file=sys.stderr,
         )
         sys.exit(2)
@@ -177,7 +164,6 @@ def main():
         capture_output=True,
         text=True,
     )
-
     ruff_parsed_output = json.loads(ruff_output.stdout)
 
     cell_sources = read_cells(notebook_path)

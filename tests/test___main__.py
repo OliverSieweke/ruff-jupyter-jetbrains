@@ -53,7 +53,7 @@ def test_rejects_non_ipynb_files():
     assert result.returncode == 2
     assert (
         result.stderr
-        == "\x1b[91mruff-jupyter-jetbrains is designed to be run on \x1b[4m.ipynb\x1b[24m files. Make sure the JetBrains file watcher is configured for Jupyter files exclusively.\x1b[0m\n"
+        == "\x1b[91mruff-jupyter-jetbrains is designed to be run on \x1b[4m.ipynb\x1b[24m files. Make sure the JetBrains file watcher is configured for Jupyter files exclusively.\x1b[0m\n"  # noqa: E501
     )
     assert result.stdout == ""
 
@@ -72,7 +72,7 @@ def test_requires_at_leat_one_file_path_arguments():
     assert result.returncode == 2
     assert (
         result.stderr
-        == "\x1b[91mNo file specified. Make sure you provide the JetBrains $FilePath$ argument in the file watcher run configurations\x1b[0m\n"
+        == "\x1b[91mNo file specified. Make sure you provide the JetBrains $FilePath$ argument in the file watcher configurations\x1b[0m\n"  # noqa: E501
     )
     assert result.stdout == ""
 
@@ -93,7 +93,7 @@ def test_requires_at_most_one_file_path_arguments():
     assert result.returncode == 2
     assert (
         result.stderr
-        == "\x1b[91mSeveral files specified. Make sure you only provide the JetBrains $FilePath$ argument in the file watcher run configurations\x1b[0m\n"
+        == "\x1b[91mSeveral files specified. Make sure you only provide the JetBrains $FilePath$ argument in the file watcher run configurations\x1b[0m\n"  # noqa: E501
     )
     assert result.stdout == ""
 
@@ -113,6 +113,6 @@ def test_nonexistent_ipynb_file():
     assert result.returncode == 2
     assert (
         result.stderr
-        == "\x1b[91mFile tests/fixtures/non_existing.ipynb does not exist. This is unexpected if you use ruff-jupyter-jetbrains as a file watcher.\x1b[0m\n"
+        == "\x1b[91mFile tests/fixtures/non_existing.ipynb does not exist. This is unexpected if you use ruff-jupyter-jetbrains as a file watcher.\x1b[0m\n"  # noqa: E501
     )
     assert result.stdout == ""
