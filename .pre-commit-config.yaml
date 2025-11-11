@@ -27,3 +27,9 @@ repos:
         language: system
         types: [ python ]
         stages: [ pre-commit ]
+      - id: uv-lock-check
+        name: uv-lock-check
+        entry: uv lock --check
+        language: system
+        pass_filenames: false
+        files: ^(pyproject\.toml|uv\.lock)$
